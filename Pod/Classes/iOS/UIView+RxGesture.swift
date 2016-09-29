@@ -21,8 +21,8 @@
 import RxSwift
 import RxCocoa
 
-extension UIView {
-    
+extension Reactive where Base: UIView {
+
     /// Reactive wrapper for view gestures. You can observe a single gesture or multiple gestures
     /// (e.g. swipe left and right); the value the Observable emits is the type of the concrete gesture
     /// out of the list you are observing.
@@ -33,75 +33,75 @@ extension UIView {
     /// - seealso: `RxCocoa` adds `rx_tap` to `NSButton/UIButton` and is sufficient if you only need to subscribe
     ///   on taps on buttons. `RxGesture` on the other hand enables `userInteractionEnabled` and handles gestures on any view
 
-    public func rx_gesture(_ type: RxGestureTypeOption...) -> ControlEvent<RxGestureTypeOption> {
-        let source: Observable<RxGestureTypeOption> = Observable.create { [weak self] observer in
+    public func gesture(_ type: RxGestureTypeOption...) -> ControlEvent<RxGestureTypeOption> {
+        let source: Observable<RxGestureTypeOption> = Observable.create { [weak base] observer in
             MainScheduler.ensureExecutingOnScheduler()
-            
-            guard let control = self else {
+
+            guard let control = base else {
                 observer.on(.completed)
                 return NopDisposable.instance
             }
-            
+
             control.isUserInteractionEnabled = true
-            
+
             var gestures = [(UIGestureRecognizer?, Disposable)]()
-            
+
             let type = type.count > 0 ? type : RxGestureTypeOption.all()
-            
+
             //taps
             if type.contains(.tap) {
                 let tap = UITapGestureRecognizer()
                 control.addGestureRecognizer(tap)
                 gestures.append(
-                    (tap, tap.rx_event.map {_ in RxGestureTypeOption.tap}
+                    (tap, tap.rx.event.map {_ in RxGestureTypeOption.tap}
                         .bindNext(observer.onNext))
                 )
             }
-            
+
             //swipes
             for direction in Array<RxGestureTypeOption>([.swipeLeft, .swipeRight, .swipeUp, .swipeDown]) {
                 if type.contains(direction) {
-                    if let swipeDirection = control.directionForGestureType(direction) {
+                    if let swipeDirection = directionForGestureType(direction) {
                         let swipe = UISwipeGestureRecognizer()
                         swipe.direction = swipeDirection
                         control.addGestureRecognizer(swipe)
                         gestures.append(
-                            (swipe, swipe.rx_event.map {_ in direction}
+                            (swipe, swipe.rx.event.map {_ in direction}
                                 .bindNext(observer.onNext))
                         )
                     }
                 }
             }
-            
+
             //long press
             if type.contains(.longPress) {
                 let press = UILongPressGestureRecognizer()
                 control.addGestureRecognizer(press)
                 gestures.append(
-                    (press, press.rx_event.map {_ in RxGestureTypeOption.longPress}
+                    (press, press.rx.event.map {_ in RxGestureTypeOption.longPress}
                         .bindNext(observer.onNext))
                 )
             }
-            
+
             //panning
-            if type.contains(.pan(.Any)) {
-                
+            if type.contains(.pan(.any)) {
+
                 //create or find existing recognizer
                 var recognizer: UIPanGestureRecognizer
-                
-                if let existingPan = self?.gestureRecognizers?.filter({ $0 is UIPanGestureRecognizer }).first as? UIPanGestureRecognizer {
+
+                if let existingPan = base?.gestureRecognizers?.filter({ $0 is UIPanGestureRecognizer }).first as? UIPanGestureRecognizer {
                     recognizer = existingPan
                 } else {
                     recognizer = UIPanGestureRecognizer()
                     control.addGestureRecognizer(recognizer)
                 }
-                
+
                 //observable
-                let panEvent = recognizer.rx_event.shareReplay(1)
-                
+                let panEvent = recognizer.rx.event.shareReplay(1)
+
                 //panning
-                for panGesture in type where panGesture == .pan(.Any) {
-                    
+                for panGesture in type where panGesture == .pan(.any) {
+
                     switch panGesture {
                     case (.pan(let config)):
                         //observe panning
@@ -111,23 +111,23 @@ extension UIView {
                             if config.type == .ended && recognizer.state != .ended {return false}
                             return true
                         }
-                        .map {[weak self] recognizer -> RxGestureTypeOption in
+                        .map {[weak base] recognizer -> RxGestureTypeOption in
                             let recognizer = recognizer as! UIPanGestureRecognizer
-                            
+
                             //current values
                             let newConfig = PanConfig(
-                                translation: recognizer.translation(in: self?.superview),
-                                velocity: recognizer.translation(in: self?.superview),
+                                translation: recognizer.translation(in: base?.superview),
+                                velocity: recognizer.translation(in: base?.superview),
                                 type: config.type,
                                 recognizer: recognizer)
                             return RxGestureTypeOption.pan(newConfig)
                         }
-                        
+
                         guard config.translation != .zero && config.velocity != .zero else {
                             gestures.append((recognizer, panObservable.bindNext(observer.onNext)))
                             break
                         }
-                        
+
                         gestures.append(
                             (recognizer, panObservable.filter { gesture in
                                 switch gesture {
@@ -142,28 +142,28 @@ extension UIView {
                     default: break
                     }
                 }
-                
+
             }
-            
+
             //rotating
-            if type.contains(.rotate(.Any)) {
-                
+            if type.contains(.rotate(.any)) {
+
                 //create or find existing recognizer
                 var recognizer: UIRotationGestureRecognizer
-                
-                if let existingRotate = self?.gestureRecognizers?.filter({ $0 is UIRotationGestureRecognizer }).first as? UIRotationGestureRecognizer {
+
+                if let existingRotate = base?.gestureRecognizers?.filter({ $0 is UIRotationGestureRecognizer }).first as? UIRotationGestureRecognizer {
                     recognizer = existingRotate
                 } else {
                     recognizer = UIRotationGestureRecognizer()
                     control.addGestureRecognizer(recognizer)
                 }
-                
+
                 //observable
-                let rotateEvent = recognizer.rx_event.shareReplay(1)
-                
+                let rotateEvent = recognizer.rx.event.shareReplay(1)
+
                 //rotating
-                for rotateGesture in type where rotateGesture == .rotate(.Any) {
-                    
+                for rotateGesture in type where rotateGesture == .rotate(.any) {
+
                     switch rotateGesture {
                     case (.rotate(let config)):
                         //observe rotating
@@ -175,17 +175,17 @@ extension UIView {
                             }
                             .map { recognizer -> RxGestureTypeOption in
                                 let recognizer = recognizer as! UIRotationGestureRecognizer
-                                
+
                                 //current values
                                 let newConfig = RotateConfig(rotation: recognizer.rotation, type: config.type, recognizer: recognizer)
                                 return RxGestureTypeOption.rotate(newConfig)
                         }
-                        
+
                         guard config.rotation != 0 else {
                             gestures.append((recognizer, rotateObservable.bindNext(observer.onNext)))
                             break
                         }
-                        
+
                         gestures.append(
                             (recognizer, rotateObservable.filter { gesture in
                                 switch gesture {
@@ -199,9 +199,9 @@ extension UIView {
                     default: break
                     }
                 }
-                
+
             }
-            
+
             //dispose gestures
             return AnonymousDisposable {
                 for (recognizer, gesture) in gestures {
@@ -211,16 +211,17 @@ extension UIView {
                     gesture.dispose()
                 }
             }
-        }.takeUntil(rx_deallocated)
-        
+        }.takeUntil(deallocated)
+
         return ControlEvent(events: source)
     }
-    
-    fileprivate func directionForGestureType(_ type: RxGestureTypeOption) -> UISwipeGestureRecognizerDirection? {
-        if type == .swipeLeft  { return .left  }
-        if type == .swipeRight { return .right }
-        if type == .swipeUp    { return .up    }
-        if type == .swipeDown  { return .down  }
-        return nil
-    }
 }
+
+fileprivate func directionForGestureType(_ type: RxGestureTypeOption) -> UISwipeGestureRecognizerDirection? {
+    if type == .swipeLeft  { return .left  }
+    if type == .swipeRight { return .right }
+    if type == .swipeUp    { return .up    }
+    if type == .swipeDown  { return .down  }
+    return nil
+}
+
