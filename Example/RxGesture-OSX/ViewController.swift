@@ -35,18 +35,18 @@ class MacViewController: NSViewController {
     @IBOutlet weak var info: NSTextField!
     @IBOutlet weak var code: NSTextField!
     
-    private let nextStep😁 = PublishSubject<Void>()
-    private let bag = DisposeBag()
-    private var stepBag = DisposeBag()
+    fileprivate let nextStep😁 = PublishSubject<Void>()
+    fileprivate let bag = DisposeBag()
+    fileprivate var stepBag = DisposeBag()
 
     override func viewWillAppear() {
         super.viewWillAppear()
         
         view.wantsLayer = true
-        view.layer?.backgroundColor = NSColor.whiteColor().CGColor
+        view.layer?.backgroundColor = NSColor.white.cgColor
         
         myView.wantsLayer = true
-        myView.layer?.backgroundColor = NSColor.redColor().CGColor
+        myView.layer?.backgroundColor = NSColor.red.cgColor
         myView.layer?.cornerRadius = 5
         
         nextStep😁.scan(0, accumulator: {acc, _ in
@@ -57,7 +57,7 @@ class MacViewController: NSViewController {
         .addDisposableTo(bag)
     }
     
-    func step(step: Int) {
+    func step(_ step: Int) {
         //release previous recognizers
         stepBag = DisposeBag()
         

@@ -22,7 +22,7 @@ import Foundation
 
 public struct PanConfig {
     public enum Type {
-        case Began, Changed, Ended, Any
+        case began, changed, ended, any
     }
     
     #if os(iOS)
@@ -37,18 +37,18 @@ public struct PanConfig {
     public var recognizer: AnyObject?
     
     public static let Began: PanConfig = {
-        return PanConfig(translation: .zero, velocity: .zero, type: .Began, recognizer: nil)
+        return PanConfig(translation: .zero, velocity: .zero, type: .began, recognizer: nil)
     }()
 
     public static let Changed: PanConfig = {
-        return PanConfig(translation: .zero, velocity: .zero, type: .Changed, recognizer: nil)
+        return PanConfig(translation: .zero, velocity: .zero, type: .changed, recognizer: nil)
     }()
 
     public static let Ended: PanConfig = {
-        return PanConfig(translation: .zero, velocity: .zero, type: .Ended, recognizer: nil)
+        return PanConfig(translation: .zero, velocity: .zero, type: .ended, recognizer: nil)
     }()
     
     public static let Any: PanConfig = {
-        return PanConfig(translation: .zero, velocity: .zero, type: .Any, recognizer: nil)
+        return PanConfig(translation: .zero, velocity: .zero, type: .any, recognizer: nil)
     }()
 }

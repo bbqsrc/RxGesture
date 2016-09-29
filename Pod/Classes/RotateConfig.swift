@@ -22,7 +22,7 @@ import Foundation
 
 public struct RotateConfig {
     public enum Type {
-        case Began, Changed, Ended, Any
+        case began, changed, ended, any
     }
     
     public let rotation: CGFloat
@@ -31,18 +31,18 @@ public struct RotateConfig {
     public var recognizer: AnyObject?
     
     public static let Began: RotateConfig = {
-        return RotateConfig(rotation: 0, type: .Began, recognizer: nil)
+        return RotateConfig(rotation: 0, type: .began, recognizer: nil)
     }()
 
     public static let Changed: RotateConfig = {
-        return RotateConfig(rotation: 0, type: .Changed, recognizer: nil)
+        return RotateConfig(rotation: 0, type: .changed, recognizer: nil)
     }()
 
     public static let Ended: RotateConfig = {
-        return RotateConfig(rotation: 0, type: .Ended, recognizer: nil)
+        return RotateConfig(rotation: 0, type: .ended, recognizer: nil)
     }()
     
     public static let Any: RotateConfig = {
-        return RotateConfig(rotation: 0, type: .Any, recognizer: nil)
+        return RotateConfig(rotation: 0, type: .any, recognizer: nil)
     }()
 }
